@@ -1,0 +1,43 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "0.0.1.0",
+	"parameters": {
+		"vnetName": {
+			"type": "string",
+			"minLength": 2,
+			"maxLength": 64,
+			"metadata": {
+				"description": "The VNET name is used in name for the network security group. Check out the template variable nsgNameFormat to change the name format."
+			}
+		},
+		"nsgInboundRules": {
+			"type": "array",
+			"metadata": {
+				"description": "A JSON arrary of network security rules."
+			}
+		},
+		"nsgOutboundRules": {
+			"type": "array",
+			"metadata": {
+				"description": "A JSON arrary of network security rules."
+			}
+		}
+	},
+	"variables": {
+		"nsgNameFormat": "[concat('nsg-', parameters('vnetName'))]"
+	},
+	"resources": [
+		{
+			"name": "[variables('nsgNameFormat')]",
+			"type": "Microsoft.Network/networkSecurityGroups",
+			"apiVersion": "2020-04-01",
+			"location": "[resourceGroup().location]",
+			"tags": {},
+			"properties": {
+				"securityRules": "[union(parameters('nsgInboundRules'), parameters('nsgOutboundRules'))]"
+			},
+			"resources": []
+		}
+	],
+	"outputs": {}
+}

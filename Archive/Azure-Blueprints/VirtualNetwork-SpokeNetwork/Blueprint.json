@@ -1,0 +1,65 @@
+{
+  "properties": {
+    "description": "Deploys a spoke virtual network with subnets.",
+    "targetScope": "subscription",
+    "parameters": {
+      "spokeVirtualNetwork_newVnet": {
+        "type": "bool",
+        "metadata": {
+          "displayName": "Deploying New VNet",
+          "description": "Only set to true if assigning for the first time. If updating an assignment, set to false."
+        },
+        "allowedValues": [
+          true,
+          false
+        ]
+      },
+      "spokeVirtualNetwork_vnetName": {
+        "type": "string",
+        "metadata": {
+          "displayName": "Virtual Network (Vnet) Name",
+          "description": "The name of the spoke virtual network."
+        },
+        "allowedValues": []
+      },
+      "spokeVirtualNetwork_vnetAddressPrefixes": {
+        "type": "array",
+        "metadata": {
+          "displayName": "VNet Address Prefixes",
+          "description": "A list of address ranges in CIDR notation in JSON array format. Example: [\"firstValue\", \"secondValue\"]."
+        },
+        "allowedValues": [],
+        "defaultValue": [
+          "x.x.x.x/xx"
+        ]
+      },
+      "spokeVirtualNetwork_vnetDnsServers": {
+        "type": "array",
+        "metadata": {
+          "displayName": "VNet DNS Settings",
+          "description": "A list of addresses in a JSON arrary format. Example: [\"firstValue\", \"secondValue\"]. If unfilled, Azure DNS will be utilised."
+        },
+        "defaultValue": [
+          "168.63.129.16"
+        ],
+        "allowedValues": []
+      },
+      "spokeVirtualNetwork_snetProperties": {
+        "type": "array",
+        "metadata": {
+          "displayName": "Subnet Names and Addresses",
+          "description": "A list of subnet names and addresses in a JSON arrary format. Example: [{\"name\":\"Subnet1\",\"addressPrefix\":\"x.x.x.x/xx\"},{\"name\":\"Subnet2\",\"addressPrefix\":\"x.x.x.x/xx\"}]."
+        }
+      }
+    },
+    "resourceGroups": {
+      "ResourceGroup": {
+        "metadata": {
+          "displayName": "Spoke Virtual Network Resource Group",
+          "description": "The name of the resource group to deploy the spoke virtual network to."
+        },
+        "dependsOn": []
+      }
+    }
+  }
+}

@@ -1,0 +1,84 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "0.0.2.0",
+	"parameters": {
+		"vnetName": {
+			"type": "string",
+			"minLength": 2,
+			"maxLength": 64,
+			"metadata": {
+				"description": "Vnet name is used to form the name of the route table. Check out the template variable rtNameFormat to change the name format."
+			}
+		},
+		"rtProperties": {
+			"type": "array",
+			"metadata": {
+				"description": "An array of subnet names and any user defined routes."
+			}
+		},
+		"routeTablePer": {
+			"type": "string",
+			"allowedValues": [
+				"VirtualNetwork",
+				"Subnet"
+			],
+			"defaultValue": "[if(greater(length(parameters('rtProperties')), 1), 'Subnet', 'VirtualNetwork')]",
+			"metadata": {
+				"description": "Whether this template should deploy a single route table for all."
+			}
+		}
+	},
+	"variables": {
+		"rtNamePrefix": "[toLower(concat(parameters('vnetName'), if(equals(parameters('routeTablePer'), 'Subnet'), '-', '')))]",
+		"rtNameSuffix": "[toLower(concat('-rt'))]"
+	},
+	"resources": [
+		{
+			"condition": "[if(equals(parameters('routeTablePer'), 'Subnet'), json('true'), json('false'))]",
+			"name": "[concat(variables('rtNamePrefix'), parameters('rtProperties')[copyIndex()].snetName, variables('rtNameSuffix'))]",
+			"type": "Microsoft.Network/routeTables",
+			"apiVersion": "2020-07-01",
+			"location": "[resourceGroup().location]",
+			"tags": {},
+			"copy": {
+				"name": "routeTableCopy",
+				"count": "[length(parameters('rtProperties'))]",
+				"mode": "parallel"
+			},
+			"properties": {
+				"routes": "[parameters('rtProperties')[copyIndex()].routes]",
+				"disableBgpRoutePropagation": "[parameters('rtProperties')[copyIndex()].disableBgpRoutePropagation]"
+			}
+		},
+		{
+			"condition": "[if(equals(parameters('routeTablePer'), 'VirtualNetwork'), json('true'), json('false'))]",
+			"name": "[concat(variables('rtNamePrefix'), variables('rtNameSuffix'))]",
+			"type": "Microsoft.Network/routeTables",
+			"apiVersion": "2020-07-01",
+			"location": "[resourceGroup().location]",
+			"tags": {},
+			"properties": {
+				"copy": [
+					{
+						"name": "routes",
+						"count": "[length(array(parameters('rtProperties')[0].routes))]",
+						"input": {
+							"name": "[parameters('rtProperties')[0].routes[copyIndex('routes')].name]",
+							"properties": {
+								"addressPrefix": "[parameters('rtProperties')[0].routes[copyIndex('routes')].properties.addressPrefix]",
+								"nextHopType": "[parameters('rtProperties')[0].routes[copyIndex('routes')].properties.nextHopType]"
+							}
+						}
+					}
+				],
+				"disableBgpRoutePropagation": "[parameters('rtProperties')[0].disableBgpRoutePropagation]"
+			}
+		}
+	],
+	"outputs": {
+		"routeTablePer": {
+			"type": "string",
+			"value": "[parameters('routeTablePer')]"
+		}
+	}
+}

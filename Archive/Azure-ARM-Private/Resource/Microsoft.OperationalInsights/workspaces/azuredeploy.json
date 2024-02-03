@@ -1,0 +1,74 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "0.0.1.0",
+	"parameters": {
+		"laWorkspaceName": {
+			"type": "string",
+			"metadata": {
+				"description": "The name of the log analytics workspace."
+			}
+		},
+		"retentionInDays": {
+			"type": "int",
+			"minValue": 30,
+			"maxValue": 730,
+			"defaultValue": 31,
+			"metadata": {
+				"description": "The number of days to retain data. 31 days of rention is included with Log Analytics workspaces."
+			}
+		},
+		"dailyQuotaGb": {
+			"type": "int",
+			"defaultValue": -1,
+			"metadata": {
+				"description": "The maximum number of GBs to ingest per day. Property defaults to -1, for unlimited storage."
+			}
+		},
+		"workspacePublicIngestion": {
+			"type": "string",
+			"allowedValues": [
+				"Enabled",
+				"Disabled"
+			],
+			"defaultValue": "Enabled"
+		},
+		"workspacePublicQuery": {
+			"type": "string",
+			"allowedValues": [
+				"Enabled",
+				"Disabled"
+			],
+			"defaultValue": "Enabled"
+		}
+	},
+	"resources": [
+		{
+			"name": "[parameters('laWorkspaceName')]",
+			"type": "Microsoft.OperationalInsights/workspaces",
+			"apiVersion": "2020-08-01",
+			"location": "[resourceGroup().location]",
+			"tags": {},
+			"properties": {
+				"source": "Azure",
+				"sku": {
+					"name": "PerGB2018"
+				},
+				"retention": "[parameters('retentionInDays')]",
+				"workspaceCapping": {
+					"dailyQuotaGb": "[parameters('dailyQuotaGb')]"
+
+					
+				},
+				"publicNetworkAccessForIngestion": "[parameters('workspacePublicIngestion')]",
+				"publicNetworkAccessForQuery": "[parameters('workspacePublicQuery')]"
+			}
+
+		}
+	],
+	"outputs": {
+		"dailyQuotaGbBool": {
+			"type": "bool",
+			"value": "[equals(0, parameters('dailyQuotaGb'))]"
+		}
+	}
+}

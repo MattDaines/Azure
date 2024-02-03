@@ -1,0 +1,26 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+	"contentVersion": "0.0.2.0",
+	"parameters": {
+		"vnetName": {
+			"value": "example-vnet"
+		},
+		"rtProperties": {
+			"value": [
+				{
+					"snetName": "subnet01",
+					"disableBgpRoutePropagation": true,
+					"routes": [
+						{
+							"name": "to_Internet",
+							"properties": {
+								"addressPrefix": "0.0.0.0/0",
+								"nextHopType": "Internet"
+							}
+						}
+					]
+				}
+			]
+		}
+	}
+}

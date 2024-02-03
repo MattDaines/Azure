@@ -1,0 +1,249 @@
+{
+  "properties": {
+    "description": "Deploys a central hub virtual network with common subnets.",
+    "targetScope": "subscription",
+    "parameters": {
+      "hubVirtualNetwork_newVnet": {
+        "type": "bool",
+        "metadata": {
+          "displayName": "Deploying New VNet",
+          "description": "Only set to true if assigning for the first time. If updating an assignment, set to false."
+        },
+        "allowedValues": [
+          true,
+          false
+        ]
+      },
+      "hubVirtualNetwork_vnetName": {
+        "type": "string",
+        "metadata": {
+          "displayName": "Virtual Network (Vnet) Name",
+          "description": "The name of the hub virtual network."
+        },
+        "allowedValues": []
+      },
+      "hubVirtualNetwork_vnetAddressPrefixes": {
+        "type": "array",
+        "metadata": {
+          "displayName": "VNet Address Prefixes",
+          "description": "A list of address ranges in CIDR notation in JSON array format. Example: [\"firstValue\", \"secondValue\"]. Recommended: A single x.x.x.0/24 address"
+        },
+        "allowedValues": [],
+        "defaultValue": [
+          "x.x.x.0/24"
+        ]
+      },
+      "hubVirtualNetwork_vnetDnsServers": {
+        "type": "array",
+        "metadata": {
+          "displayName": "VNet DNS Settings",
+          "description": "A list of addresses in a JSON arrary format. Example: [\"firstValue\", \"secondValue\"]. If unfilled, Azure DNS will be utilised."
+        },
+        "defaultValue": [
+          "168.63.129.16"
+        ],
+        "allowedValues": []
+      },
+      "createSubnet:GatewaySubnet_snetAddressPrefix": {
+        "type": "string",
+        "metadata": {
+          "displayName": "Gateway Subnet Address Prefix",
+          "description": "An address range in CIDR notation. Recommended: x.x.x.224/27"
+        },
+        "allowedValues": [],
+        "defaultValue": "x.x.x.224/27"
+      },
+      "createSubnet:MgmtSubnet_snetAddressPrefix": {
+        "type": "string",
+        "metadata": {
+          "displayName": "Management Subnet Address Prefix",
+          "description": "An address range in CIDR notation. Recommended: x.x.x.0/28"
+        },
+        "allowedValues": [],
+        "defaultValue": "x.x.x.0/28"
+      },
+      "createSubnet:AdSubnet_snetAddressName": {
+        "type": "string",
+        "metadata": {
+          "displayName": "Active Directory Subnet Name",
+          "description": "The name of the subnet that will host traditional AD services. Recommended: ADServices"
+        },
+        "allowedValues": [],
+        "defaultValue": "ADServices"
+      },
+      "createSubnet:AdSubnet_snetAddressPrefix": {
+        "type": "string",
+        "metadata": {
+          "displayName": "Active Directory Subnet Address Prefix",
+          "description": "An address range in CIDR notation. Recommended: x.x.x.16/28"
+        },
+        "allowedValues": [],
+        "defaultValue": "x.x.x.16/28"
+      },
+      "createSubnet:NvaInSubnet_snetName": {
+        "type": "string",
+        "metadata": {
+          "displayName": "Network Virtual Appliance In Subnet Name",
+          "description": "The name of the inside subnet for a NVA. Recommended: NvaName-In"
+        },
+        "allowedValues": []
+      },
+      "createSubnet:NvaInSubnet_snetAddressPrefix": {
+        "type": "string",
+        "metadata": {
+          "displayName": "Network Virtual Appliance In Subnet Address Prefix",
+          "description": "An address range in CIDR notation. Recommended: x.x.x.192/28"
+        },
+        "allowedValues": [],
+        "defaultValue": "x.x.x.192/28"
+      },
+      "createSubnet:NvaOutSubnet_snetName": {
+        "type": "string",
+        "metadata": {
+          "displayName": "Network Virtual Appliance Out Subnet Name",
+          "description": "The name of the inside subnet for a NVA. Recommended: NvaName-Out"
+        },
+        "allowedValues": []
+      },
+      "createSubnet:NvaOutSubnet_snetAddressPrefix": {
+        "type": "string",
+        "metadata": {
+          "displayName": "Network Virtual Appliance Out Subnet Address Prefix",
+          "description": "An address range in CIDR notation. Recommended: x.x.x.208/28"
+        },
+        "allowedValues": [],
+        "defaultValue": "x.x.x.208/28"
+      },
+      "createSubnet:AzFirewallSubnet_snetAddressPrefix": {
+        "type": "string",
+        "metadata": {
+          "displayName": "Azure Firewall Subnet Address Prefix",
+          "description": "An address range in CIDR notation. Recommended: x.x.x.128/26"
+        },
+        "allowedValues": [],
+        "defaultValue": "x.x.x.128/26"
+      },
+      "createVng:VpnGateway_deployVpnVng": {
+        "type": "bool",
+        "metadata": {
+          "displayName": "Deploy VPN Gateway",
+          "description": "Whether to deploy a VPN Virtual Network Gateway and a public IP address into the Gateway subnet."
+        },
+        "allowedValues": [
+          true,
+          false
+        ],
+        "defaultValue": false
+      },
+      "createVng:VpnGateway_vngName": {
+        "type": "string",
+        "metadata": {
+          "displayName": "VPN Gateway Name",
+          "description": "A name for the VPN virtual network gateway. Recommended: vgw-<env>-<region>-hub-###"
+        },
+        "allowedValues": []
+      },
+      "createVng:VpnGateway_vngGatewaySku": {
+        "type": "string",
+        "metadata": {
+          "displayName": "VPN Gateway Sku",
+          "description": "The size of the VPN virtual network gateway."
+        },
+        "allowedValues": [
+          "Basic",
+          "VpnGw1",
+          "VpnGw2",
+          "VpnGw3",
+          "VpnGw4",
+          "VpnGw5",
+          "VpnGw1AZ",
+          "VpnGw2AZ",
+          "VpnGw3AZ",
+          "VpnGw4AZ",
+          "VpnGw5AZ"
+        ],
+        "defaultValue": "VpnGw1"
+      },
+      "createVng:ErGateway_deployErVng": {
+        "type": "bool",
+        "metadata": {
+          "displayName": "Deploy ExpressRoute Gateway",
+          "description": "Whether to deploy an ExpressRoute Virtual Network Gateway and a public IP address."
+        },
+        "allowedValues": [
+          true,
+          false
+        ],
+        "defaultValue": false
+      },
+      "createVng:ErGateway_vngName": {
+        "type": "string",
+        "metadata": {
+          "displayName": "ExpressRoute Gateway Name",
+          "description": "A name for the virtual network gateway. Recommended: vgw-<env>-<region>-hub-###"
+        },
+        "allowedValues": []
+      },
+      "createVng:ErGateway_vngGatewaySku": {
+        "type": "string",
+        "metadata": {
+          "displayName": "ExpressRoute Gateway Sku",
+          "description": "The size of the ExpressRoute virtual network gateway."
+        },
+        "allowedValues": [
+          "Standard",
+          "HighPerformance",
+          "UltraPerformance",
+          "ErGw1AZ",
+          "ErGw2AZ",
+          "ErGw3AZ"
+        ],
+        "defaultValue": "VpnGw1"
+      },
+      "hubAzFirewall_newFirewall": {
+        "type": "bool",
+        "metadata": {
+          "displayName": "Deploying New Azure Firewall",
+          "description": "Only set to true if assigning for the first time. If updating an assignment, set to false."
+        },
+        "allowedValues": [
+          true,
+          false
+        ]
+      },
+      "hubAzFirewall_azFirewallName": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 64,
+        "metadata": {
+          "displayName": "Azure Firewall Name",
+          "description": "The name of the Azure Firewall."
+        }
+      },
+      "hubAzFirewall_azFirewallZones": {
+        "type": "array",
+        "metadata": {
+          "displayName": "Azure Firewall Availability Zones",
+          "description": "What availability zones to deploy the Azure Firewall to."
+        },
+        "allowedValues": [
+          "1",
+          "2",
+          "3"
+        ],
+        "defaultValue": [
+          "1",
+          "2"
+        ]
+      }
+    },
+    "resourceGroups": {
+      "ResourceGroup": {
+        "metadata": {
+          "displayName": "Hub Virtual Network Resource Group"
+        },
+        "dependsOn": []
+      }
+    }
+  }
+}

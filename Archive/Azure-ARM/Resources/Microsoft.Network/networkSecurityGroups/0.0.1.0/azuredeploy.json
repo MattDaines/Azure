@@ -1,0 +1,75 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "0.0.1.0",
+	"parameters": {
+		"vnetName": {
+			"type": "string",
+			"minLength": 2,
+			"maxLength": 64,
+			"metadata": {
+				"description": "Typically an NSG is deployed per VNET. VNET name is used to form the name of the network security group. Check out the template variable nsgNameFormat to change the name format."
+			}
+		},
+		"nsgInboundRules": {
+			"type": "array",
+			"defaultValue": [
+				{
+					"name": "in_DenyAll",
+					"properties": {
+						"description": "Denies all inbound flows that haven't been explicitly allowed.",
+						"direction": "Inbound",
+						"access": "Deny",
+						"protocol": "*",
+						"priority": 4096,
+						"sourcePortRange": "*",
+						"destinationPortRange": "*",
+						"sourceAddressPrefix": "*",
+						"destinationAddressPrefix": "*"
+					}
+				}
+			],
+			"metadata": {
+				"description": "A JSON arrary of network security rules."
+			}
+		},
+		"nsgOutboundRules": {
+			"type": "array",
+			"defaultValue": [
+				{
+					"name": "out_DenyAll",
+					"properties": {
+						"description": "Denies all outbound flows that haven't been explicitly allowed.",
+						"direction": "Outbound",
+						"access": "Deny",
+						"protocol": "*",
+						"priority": 4096,
+						"sourcePortRange": "*",
+						"destinationPortRange": "*",
+						"sourceAddressPrefix": "*",
+						"destinationAddressPrefix": "*"
+					}
+				}
+			],
+			"metadata": {
+				"description": "A JSON arrary of network security rules."
+			}
+		}
+	},
+	"variables": {
+		"nsgNameFormat": "[toLower(concat(parameters('vnetName'), '-nsg'))]"
+	},
+	"resources": [
+		{
+			"name": "[variables('nsgNameFormat')]",
+			"type": "Microsoft.Network/networkSecurityGroups",
+			"apiVersion": "2020-04-01",
+			"location": "[resourceGroup().location]",
+			"tags": {},
+			"properties": {
+				"securityRules": "[union(parameters('nsgInboundRules'), parameters('nsgOutboundRules'))]"
+			},
+			"resources": []
+		}
+	],
+	"outputs": {}
+}

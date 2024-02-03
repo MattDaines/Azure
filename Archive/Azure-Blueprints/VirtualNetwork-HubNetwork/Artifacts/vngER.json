@@ -1,0 +1,125 @@
+{
+  "kind": "template",
+  "properties": {
+    "displayName": "ExpressRoute Virtual Network Gateway",
+    "description": "Optionally creates a virtual network gateway for ExpressRoute.",
+    "dependsOn": [
+      "vnetHubNetwork",
+      "snetGatewaySubnet"
+    ],
+    "template": {
+      "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "deployErVng": {
+          "type": "bool",
+          "allowedValues": [
+            true,
+            false
+          ],
+          "defaultValue": false,
+          "metadata": {
+            "description": "Set to true to deploy a ExpressRoute virtual network gateway."
+          }
+        },
+        "vngName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "metadata": {
+            "description": "A name for the virtual network gateway. Recommended: vgw-<env>-<region>-hub-###"
+          }
+        },
+        "vngGatewaySku": {
+          "type": "string",
+          "allowedValues": [
+            "Standard",
+            "HighPerformance",
+            "UltraPerformance",
+            "ErGw1AZ",
+            "ErGw2AZ",
+            "ErGw3AZ"
+          ],
+          "metadata": {
+            "description": "Select a size for the virtual network gateway."
+          }
+        },
+        "vngSubnetResourceId": {
+          "type": "string"
+        }
+      },
+      "variables": {
+        "vngBasicPip": [
+          "Standard",
+          "HighPerformance",
+          "UltraPerformance"
+        ]
+      },
+      "resources": [
+        {
+          "condition": "[parameters('deployErVng')]",
+          "name": "[toLower(concat('pip-', parameters('vngName')))]",
+          "type": "Microsoft.Network/publicIPAddresses",
+          "apiVersion": "2020-04-01",
+          "location": "[resourceGroup().location]",
+          "tags": {},
+          "sku": {
+            "name": "[if(contains(variables('vngBasicPip'), parameters('vngGatewaySku')), 'Basic', 'Standard')]"
+          },
+          "properties": {
+            "publicIPAllocationMethod": "Static",
+            "publicIPAddressVersion": "IPv4"
+          }
+        },
+        {
+          "condition": "[parameters('deployErVng')]",
+          "name": "[parameters('vngName')]",
+          "type": "Microsoft.Network/virtualNetworkGateways",
+          "apiVersion": "2020-04-01",
+          "dependsOn": [
+            "[resourceId('Microsoft.Network/publicIPAddresses', toLower(concat('pip-', parameters('vngName'))))]"
+          ],
+          "location": "[resourceGroup().location]",
+          "tags": {},
+          "properties": {
+            "ipConfigurations": [
+              {
+                "properties": {
+                  "subnet": {
+                    "id": "[parameters('vngSubnetResourceId')]"
+                  },
+                  "publicIPAddress": {
+                    "id": "[resourceId('Microsoft.Network/publicIPAddresses', toLower(concat('pip-', parameters('vngName'))))]"
+                  }
+                },
+                "name": "[parameters('vngName')]"
+              }
+            ],
+            "gatewayType": "ExpressRoute",
+            "activeActive": false,
+            "sku": {
+              "name": "[parameters('vngGatewaySku')]",
+              "tier": "[parameters('vngGatewaySku')]"
+            }
+          }
+        }
+      ],
+      "outputs": {}
+    },
+    "resourceGroup": "ResourceGroup",
+    "parameters": {
+      "vngSubnetResourceId": {
+        "value": "[artifacts('snetGatewaySubnet').outputs.subnetResourceId]"
+      },
+      "deployErVng": {
+        "value": "[parameters('createVng:ErGateway_deployErVng')]"
+      },
+      "vngName": {
+        "value": "[parameters('createVng:ErGateway_vngName')]"
+      },
+      "vngGatewaySku": {
+        "value": "[parameters('createVng:ErGateway_vngGatewaySku')]"
+      }
+    }
+  }
+}

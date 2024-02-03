@@ -1,0 +1,64 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+	"contentVersion": "0.0.2.0",
+	"parameters": {
+		"vnetName": {
+			"value": "example-vnet"
+		},
+		"vnetAddressPrefixes": {
+			"value": [
+				"10.0.0.0/8",
+				"172.16.0.0/12",
+				"192.168.0.0/16"
+			]
+		},
+		"snetProperties": {
+			"value": [
+				{
+					"name": "subnet01",
+					"addressPrefix": "10.0.0.0/24",
+					"attachNSG": false,
+					"attachRT": false,
+					"serviceEndpoints": [
+                        {
+                            "service": "Microsoft.Storage"
+                        },
+                        {
+                            "service": "Microsoft.KeyVault"
+                        }
+                    ],
+					"delegations": null,
+					"privateEndpointNetworkPolicies": "Enabled"
+				},
+				{
+					"name": "subnet02",
+					"addressPrefix": "10.0.1.0/24",
+					"attachNSG": false,
+					"attachRT": false,
+					"serviceEndpoints": null,
+                    "delegations": [
+                        {
+                            "name": "Delegation",
+                            "properties": {
+                                "serviceName": "Microsoft.Web/serverFarms",
+                                "actions": [
+                                    "Microsoft.Network/virtualNetworks/subnets/action"
+                                ]
+                            }
+                        }
+                    ],
+					"privateEndpointNetworkPolicies": "Enabled"
+				},
+				{
+					"name": "subnet03",
+					"addressPrefix": "10.0.2.0/24",
+					"attachNSG": false,
+					"attachRT": false,
+					"serviceEndpoints": null,
+					"delegations": null,
+					"privateEndpointNetworkPolicies": null
+				}
+			]
+		}
+	}
+}

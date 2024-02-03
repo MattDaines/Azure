@@ -1,0 +1,12 @@
+{
+  "kind": "roleAssignment",
+  "properties": {
+    "displayName": "Network Administrators",
+    "dependsOn": [],
+    "roleDefinitionId": "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c",
+    "principalIds": [
+      "9acc113d-ea8a-438b-b112-809654ce13ce"
+    ],
+    "resourceGroup": "ResourceGroup"
+  }
+}

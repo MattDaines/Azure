@@ -1,0 +1,22 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json",
+	"contentVersion": "0.0.1.0",
+	"parameters": {
+		"storageAccounts": {
+			"value": [
+				{
+					"name": "mystorageaccount01",
+					"httpsOnly": true,
+					"accessTier": "hot",
+					"sku": "Standard_LRS"
+				},
+				{
+					"name": "mystorageaccount01",
+					"httpsOnly": true,
+					"accessTier": "hot",
+					"sku": "Standard_LRS"
+				}
+			]
+		}
+	}
+}

@@ -1,0 +1,63 @@
+{
+  "kind": "template",
+  "properties": {
+    "displayName": "Hub Subnet: NVA-In Subnet",
+    "description": "Creates the inside subnet for hosting a network virtual appliance.",
+    "dependsOn": [
+      "vnetHubNetwork"
+    ],
+    "template": {
+      "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "vnetName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "metadata": {
+            "description": "The Vnet to deploy this subnet to. Both Vnet and Snet need to be in the same resource group."
+          }
+        },
+        "snetName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "metadata": {
+            "description": "The name of the subnet to create."
+          }
+        },
+        "snetAddressPrefix": {
+          "type": "string",
+          "metadata": {
+            "description": "An address range in CIDR notation."
+          }
+        }
+      },
+      "variables": {},
+      "resources": [
+        {
+          "condition": true,
+          "name": "[concat(parameters('vnetName'), '/', parameters('snetName'))]",
+          "type": "Microsoft.Network/virtualNetworks/subnets",
+          "apiVersion": "2019-11-01",
+          "properties": {
+            "addressPrefix": "[parameters('snetAddressPrefix')]"
+          }
+        }
+      ],
+      "outputs": {}
+    },
+    "resourceGroup": "ResourceGroup",
+    "parameters": {
+      "vnetName": {
+        "value": "[artifacts('vnetHubNetwork').outputs.virtualNetworkResourceName]"
+      },
+      "snetName": {
+        "value": "[parameters('createSubnet:NvaInSubnet_snetName')]"
+      },
+      "snetAddressPrefix": {
+        "value": "[parameters('createSubnet:NvaInSubnet_snetAddressPrefix')]"
+      }
+    }
+  }
+}

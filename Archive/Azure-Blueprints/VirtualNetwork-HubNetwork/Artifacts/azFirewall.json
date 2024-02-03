@@ -1,0 +1,116 @@
+{
+  "kind": "template",
+  "properties": {
+    "displayName": "Azure Firewall",
+    "description": "Deploys a zone-redundant Azure Firewall into the hub network.",
+    "dependsOn": [
+      "vnetHubNetwork",
+      "snetAzFirewall"
+    ],
+    "template": {
+      "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "newFirewall": {
+          "type": "bool",
+          "metadata": {
+            "displayName": "Deploying New Azure Firewall",
+            "description": "Only set to true if assigning for the first time. If updating an assignment, set to false."
+          },
+          "allowedValues": [
+            true,
+            false
+          ]
+        },
+        "azFirewallName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "metadata": {
+            "description": "The name of the Azure Firewall. Recommended: "
+          }
+        },
+        "azFirewallZones": {
+          "type": "array",
+          "metadata": {
+            "description": "What availability zones to deploy the Azure Firewall to."
+          },
+          "allowedValues": [
+            "1",
+            "2",
+            "3"
+          ]
+        },
+        "azFirewallSubnetResourceId": {
+          "type": "string",
+          "metadata": {
+            "description": "The subnet ID that the Azure Firewall will be deplyoed to.."
+          }
+        }
+      },
+      "variables": {},
+      "resources": [
+        {
+          "condition": "[parameters('newFirewall')]",
+          "name": "[concat('pip-', parameters('azFirewallName'))]",
+          "type": "Microsoft.Network/publicIpAddresses",
+          "apiVersion": "2019-02-01",
+          "location": "[resourceGroup().location]",
+          "tags": {},
+          "sku": {
+            "name": "Standard"
+          },
+          "properties": {
+            "publicIPAllocationMethod": "Static"
+          }
+        },
+        {
+          "condition": "[parameters('newFirewall')]",
+          "name": "[parameters('azFirewallName')]",
+          "type": "Microsoft.Network/azureFirewalls",
+          "apiVersion": "2020-04-01",
+          "location": "[resourceGroup().location]",
+          "tags": {},
+          "dependsOn": [
+            "[resourceId('Microsoft.Network/publicIpAddresses', concat('pip-', parameters('azFirewallName')))]"
+          ],
+          "zones": "[parameters('azFirewallZones')]",
+          "properties": {
+            "applicationRuleCollections": [],
+            "natRuleCollections": [],
+            "networkRuleCollections": [],
+            "ipConfigurations": [
+              {
+                "name": "[parameters('azFirewallName')]",
+                "properties": {
+                  "subnet": {
+                    "id": "[parameters('azFirewallSubnetResourceId')]"
+                  },
+                  "publicIPAddress": {
+                    "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat('pip-', parameters('azFirewallName')))]"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "outputs": {}
+    },
+    "resourceGroup": "ResourceGroup",
+    "parameters": {
+      "newFirewall": {
+        "value": "[parameters('hubAzFirewall_newFirewall')]"
+      },
+      "azFirewallName": {
+        "value": "[parameters('hubAzFirewall_azFirewallName')]"
+      },
+      "azFirewallZones": {
+        "value": "[parameters('hubAzFirewall_azFirewallZones')]"
+      },
+      "azFirewallSubnetResourceId": {
+        "value": "[artifacts('snetAzFirewall').outputs.subnetResourceId]"
+      }
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "0.0.1.0",
+	"parameters": {
+		"vnetName": {
+			"type": "string",
+			"minLength": 2,
+			"maxLength": 64,
+			"metadata": {
+				"description": "The name of the virtual network."
+			}
+		},
+		"snetProperties": {
+			"type": "array",
+			"metadata": {
+				"description": "An arrary of subnet names and any user defined routes."
+			}
+		}
+	},
+	"variables": {},
+	"resources": [
+		{
+			"name": "[concat('rt-', parameters('vnetName'), '-', parameters('snetProperties')[copyIndex()].snetName)]",
+			"type": "Microsoft.Network/routeTables",
+			"apiVersion": "2020-06-01",
+			"location": "[resourceGroup().location]",
+			"tags": {},
+			"copy": {
+				"name": "routeTableCopy",
+				"count": "[length(parameters('snetProperties'))]",
+				"mode": "parallel"
+			},
+			"properties": {
+				"routes": "[parameters('snetProperties')[copyIndex()].routes]",
+				"disableBgpRoutePropagation": "[parameters('snetProperties')[copyIndex()].disableBgpRoutePropagation]"
+			}
+		}
+	],
+	"outputs": {}
+}

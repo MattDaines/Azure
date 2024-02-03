@@ -1,0 +1,95 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "0.0.2.0",
+	"parameters": {
+		"vnetName": {
+			"type": "string",
+			"minLength": 2,
+			"maxLength": 64,
+			"metadata": {
+				"description": "The name of the virtual network."
+			}
+		},
+		"vnetAddressPrefixes": {
+			"type": "array",
+			"minLength": 1,
+			"maxLength": 255,
+			"metadata": {
+				"description": "A comma separated list of address ranges in CIDR notation."
+			}
+		},
+		"vnetDnsServers": {
+			"type": "array",
+			"maxLength": 20,
+			"defaultValue": [
+				"168.63.129.16"
+			],
+			"metadata": {
+				"description": "A comma separated list of domain name servers to use. If no parameter is provided this template will default to Azure Provided DNS."
+			}
+		},
+		"snetProperties": {
+			"type": "array",
+			"metadata": {
+				"description": "A JSON array of subnets to deploy and their properties to apply."
+			}
+		},
+		"routeTablePer": {
+			"type": "string",
+			"allowedValues": [
+				"VirtualNetwork",
+				"Subnet"
+			],
+			//"defaultValue": "[reference(resourceId('Microsoft.Resources/deployments', parameters('routeTableDeploymentName')), providers('Microsoft.Resources', 'deployments').apiVersions[0]).parameters.routeTablePer.value]",
+			"metadata": {
+				"description": "Whether this template should deploy a single route table for all."
+			}
+		}
+	},
+	"variables": {
+		"nsgNameFormat": "[toLower(concat(parameters('vnetName'), '-nsg'))]",
+		"rtNamePrefix": "[toLower(concat(parameters('vnetName'), if(equals(parameters('routeTablePer'), 'Subnet'), '-', '')))]",
+		"rtNameSuffix": "[toLower(concat('-rt'))]"
+	},
+	"resources": [
+		{
+			"name": "[parameters('vnetName')]",
+			"type": "Microsoft.Network/virtualNetworks",
+			"apiVersion": "2020-06-01",
+			"location": "[resourceGroup().location]",
+			"dependsOn": [],
+			"tags": {},
+			"properties": {
+				"addressSpace": {
+					"addressPrefixes": "[parameters('vnetAddressPrefixes')]"
+				},
+				"dhcpOptions": {
+					"dnsServers": "[if(contains(json('[[\"168.63.129.16\"]'), parameters('vnetDnsServers')), '', parameters('vnetDnsServers') )]"
+				},
+				"copy": [
+					{
+						"name": "subnets",
+						"count": "[length(parameters('snetProperties'))]",
+						"input": {
+							"name": "[parameters('snetProperties')[copyIndex('subnets')].name]",
+							"properties": {
+								"addressPrefix": "[parameters('snetProperties')[copyIndex('subnets')].addressPrefix]",
+								"networkSecurityGroup": "[if(parameters('snetProperties')[copyIndex('subnets')].attachNSG, json(concat('{\"id\": \"', resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgNameFormat')),'\"}')), json('null'))]",
+								"routeTable": "[if(parameters('snetProperties')[copyIndex('subnets')].attachRT, if(equals(parameters('routeTablePer'), 'VirtualNetwork'), json(concat('{\"id\": \"', resourceId('Microsoft.Network/routeTables', concat(variables('rtNamePrefix'), variables('rtNameSuffix'))),'\"}')), json(concat('{\"id\": \"', resourceId('Microsoft.Network/routeTables', concat(variables('rtNamePrefix'), parameters('snetProperties')[copyIndex('subnets')].name, variables('rtNameSuffix'))),'\"}'))), json('null'))]",
+								"serviceEndpoints": "[parameters('snetProperties')[copyIndex('subnets')].serviceEndpoints]",
+								"delegations": "[parameters('snetProperties')[copyIndex('subnets')].delegations]",
+                                "privateEndpointNetworkPolicies": "[parameters('snetProperties')[copyIndex('subnets')].privateEndpointNetworkPolicies]"
+							}
+						}
+					}
+				]
+			}
+		}
+	],
+	"outputs": {
+		"virtualNetworkResourceId": {
+			"type": "string",
+			"value": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+		}
+	}
+}

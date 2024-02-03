@@ -1,0 +1,83 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "0.0.2.0",
+	"parameters": {
+		"vnetName": {
+			"type": "string",
+			"minLength": 2,
+			"maxLength": 64,
+			"metadata": {
+				"description": "The name of the virtual network."
+			}
+		},
+		"vnetAddressPrefixes": {
+			"type": "array",
+			"minLength": 1,
+			"maxLength": 255,
+			"metadata": {
+				"description": "A comma separated list of address ranges in CIDR notation."
+			}
+		},
+		"vnetDnsServers": {
+			"type": "array",
+			"maxLength": 20,
+			"defaultValue": [
+				"168.63.129.16"
+			],
+			"metadata": {
+				"description": "A comma separated list of domain name servers to use. If no parameter is provided this template will default to Azure Provided DNS."
+			}
+		},
+		"snetProperties": {
+			"type": "array",
+			"metadata": {
+				"description": "A JSON array of subnets to deploy and their properties to apply."
+			}
+		}
+	},
+	"variables": {
+		"nsgNameFormat": "[concat('nsg-', parameters('vnetName'))]",
+		"rtNameFormat": "[concat('rt-', parameters('vnetName'))]"
+	},
+	"resources": [
+		{
+			"name": "[parameters('vnetName')]",
+			"type": "Microsoft.Network/virtualNetworks",
+			"apiVersion": "2020-06-01",
+			"location": "[resourceGroup().location]",
+			"dependsOn": [],
+			"tags": {},
+			"properties": {
+				"addressSpace": {
+					"addressPrefixes": "[parameters('vnetAddressPrefixes')]"
+				},
+				"dhcpOptions": {
+					"dnsServers": "[if(contains(json('[[\"168.63.129.16\"]'), parameters('vnetDnsServers')), '', parameters('vnetDnsServers') )]"
+				},
+				"copy": [
+					{
+						"name": "subnets",
+						"count": "[length(parameters('snetProperties'))]",
+						"input": {
+							"name": "[parameters('snetProperties')[copyIndex('subnets')].name]",
+							"properties": {
+								"addressPrefix": "[parameters('snetProperties')[copyIndex('subnets')].addressPrefix]",
+								"networkSecurityGroup": "[if(parameters('snetProperties')[copyIndex('subnets')].attachNSG, json(concat('{\"id\": \"', resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgNameFormat')),'\"}')), json('null'))]",
+								"routeTable": "[if(parameters('snetProperties')[copyIndex('subnets')].attachRT, json(concat('{\"id\": \"', resourceId('Microsoft.Network/routeTables', concat(variables('rtNameFormat'), '-', parameters('snetProperties')[copyIndex('subnets')].name)),'\"}')), json('null'))]",
+								"serviceEndpoints": "[parameters('snetProperties')[copyIndex('subnets')].serviceEndpoints]",
+								"delegations": "[parameters('snetProperties')[copyIndex('subnets')].delegations]",
+                                "privateEndpointNetworkPolicies": "[parameters('snetProperties')[copyIndex('subnets')].privateEndpointNetworkPolicies]"
+							}
+						}
+					}
+				]
+			}
+		}
+	],
+	"outputs": {
+		"virtualNetworkResourceId": {
+			"type": "string",
+			"value": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+		}
+	}
+}

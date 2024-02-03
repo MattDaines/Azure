@@ -1,0 +1,21 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json",
+    "contentVersion": "0.0.1.0",
+    "parameters": {
+        "laWorkspaceName": {
+            "value": "laexample01"
+        },
+        "retentionInDays": {
+            "value": 60
+        },
+        "dailyQuotaGb": {
+            "value": -1
+        },
+        "workspacePublicIngestion": {
+            "value": "Enabled"
+        },
+        "workspacePublicQuery": {
+            "value": "Enabled"
+        }
+    }
+}

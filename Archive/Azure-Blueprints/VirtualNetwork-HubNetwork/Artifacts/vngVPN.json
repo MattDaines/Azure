@@ -1,0 +1,181 @@
+{
+  "kind": "template",
+  "properties": {
+    "displayName": "VPN Virutal Network Gateway",
+    "description": "Optionally creates a virtual network gateway for a site-to-site VPN.",
+    "dependsOn": [
+      "vnetHubNetwork",
+      "snetGatewaySubnet"
+    ],
+    "template": {
+      "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "deployVpnVng": {
+          "type": "bool",
+          "allowedValues": [
+            true,
+            false
+          ],
+          "defaultValue": false,
+          "metadata": {
+            "description": "Set to true to deploy a VPN virtual network gateway."
+          }
+        },
+        "vngName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "metadata": {
+            "description": "A name for the virtual network gateway. Recommended: vgw-<env>-<region>-hub-###"
+          }
+        },
+        "vngGatewayBGP": {
+          "type": "bool",
+          "allowedValues": [
+            true,
+            false
+          ],
+          "defaultValue": false,
+          "metadata": {
+            "description": "Set to true to enable BGP on the virtual network gateway."
+          }
+        },
+        "vngGatewaySku": {
+          "type": "string",
+          "allowedValues": [
+            "Basic",
+            "VpnGw1",
+            "VpnGw2",
+            "VpnGw3",
+            "VpnGw4",
+            "VpnGw5",
+            "VpnGw1AZ",
+            "VpnGw2AZ",
+            "VpnGw3AZ",
+            "VpnGw4AZ",
+            "VpnGw5AZ"
+          ],
+          "metadata": {
+            "description": "Select a size for the virtual network gateway. Note: A generation 2 VPN Gateway will be deployed if supported."
+          }
+        },
+        "vngBgpAsn": {
+          "type": "int",
+          "defaultValue": 65515,
+          "metadata": {
+            "description": "BGP ASN configuration. See: https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-bgp-overview#what-private-asns-can-i-use"
+          }
+        },
+        "vngSubnetResourceId": {
+          "type": "string"
+        },
+        "vpnType": {
+          "type": "string",
+          "allowedValues": [
+            "PolicyBased",
+            "RouteBased"
+          ],
+          "defaultValue": "RouteBased",
+          "metadata": {
+            "description": "Whether to deploy a PolicyBase or RouteBased VPN. PolicyBased VPNs must be set to a Basic Gateway Sku"
+          }
+        }
+      },
+      "variables": {
+        "vngGeneration1": [
+          "Basic",
+          "VpnGw1",
+          "VpnGw1AZ"
+        ],
+        "vngGeneration2": [
+          "Basic",
+          "VpnGw2",
+          "VpnGw3",
+          "VpnGw4",
+          "VpnGw5",
+          "VpnGw2AZ",
+          "VpnGw3AZ",
+          "VpnGw4AZ",
+          "VpnGw5AZ"
+        ],
+        "vngBasicPip": [
+          "Basic",
+          "VpnGw1",
+          "VpnGw2",
+          "VpnGw3",
+          "VpnGw4",
+          "VpnGw5"
+        ]
+      },
+      "resources": [
+        {
+          "condition": "[parameters('deployVpnVng')]",
+          "name": "[toLower(concat('pip-', parameters('vngName')))]",
+          "type": "Microsoft.Network/publicIPAddresses",
+          "apiVersion": "2020-04-01",
+          "location": "[resourceGroup().location]",
+          "tags": {},
+          "sku": {
+            "name": "[if(contains(variables('vngBasicPip'), parameters('vngGatewaySku')), 'Basic', 'Standard')]"
+          },
+          "properties": {
+            "publicIPAllocationMethod": "Dynamic",
+            "publicIPAddressVersion": "IPv4"
+          }
+        },
+        {
+          "condition": "[parameters('deployVpnVng')]",
+          "name": "[parameters('vngName')]",
+          "type": "Microsoft.Network/virtualNetworkGateways",
+          "apiVersion": "2020-04-01",
+          "dependsOn": [
+            "[resourceId('Microsoft.Network/publicIPAddresses', toLower(concat('pip-', parameters('vngName'))))]"
+          ],
+          "location": "[resourceGroup().location]",
+          "tags": {},
+          "properties": {
+            "ipConfigurations": [
+              {
+                "properties": {
+                  "subnet": {
+                    "id": "[parameters('vngSubnetResourceId')]"
+                  },
+                  "publicIPAddress": {
+                    "id": "[resourceId('Microsoft.Network/publicIPAddresses', toLower(concat('pip-', parameters('vngName'))))]"
+                  }
+                },
+                "name": "[parameters('vngName')]"
+              }
+            ],
+            "gatewayType": "Vpn",
+            "vpnType": "[parameters('vpnType')]",
+            "vpnGatewayGeneration": "[if(contains(variables('vngGeneration1'), parameters('vngGatewaySku')), 'Generation1', 'Generation1')]",
+            "enableBgp": "[parameters('vngGatewayBGP')]",
+            "activeActive": false,
+            "sku": {
+              "name": "[parameters('vngGatewaySku')]",
+              "tier": "[parameters('vngGatewaySku')]"
+            }
+          }
+        }
+      ],
+      "outputs": {}
+    },
+    "resourceGroup": "ResourceGroup",
+    "parameters": {
+      "vngSubnetResourceId": {
+        "value": "[artifacts('snetGatewaySubnet').outputs.subnetResourceId]"
+      },
+      "deployVpnVng": {
+        "value": "[parameters('createVng:VpnGateway_deployVpnVng')]"
+      },
+      "vngName": {
+        "value": "[parameters('createVng:VpnGateway_vngName')]"
+      },
+      "vngGatewaySku": {
+        "value": "[parameters('createVng:VpnGateway_vngGatewaySku')]"
+      }
+    }
+  }
+}
